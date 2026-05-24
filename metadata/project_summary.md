@@ -1,9 +1,10 @@
 # 论文知识库 RAG 系统项目总结
 
-> 版本: v1.0
+> 版本: v1.1
 > 日期: 2026-05-24
 > 维护者: Main Agent
 > 文档类型: 项目总结报告
+> 更新说明: 更新Embedding模型配置为实际使用的nomic-embed-text (768维)
 
 ---
 
@@ -45,8 +46,8 @@
 
 ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
 │ 向量数据库   │  │ Embedding    │  │ 检索系统     │  │ Agent框架    │
-│ ChromaDB     │  │ BGE-large-zh │  │ 混合检索     │  │ LangGraph    │
-│ (1.9M已入库) │  │ (1024维GPU)  │  │ Vector+BM25  │  │ 6节点工作流  │
+│ ChromaDB     │  │ nomic-embed  │  │ 混合检索     │  │ LangGraph    │
+│ (216条入库)  │  │ (768维Ollama)│  │ Vector+BM25  │  │ 6节点工作流  │
 └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
        │                 │                 │                 │
        └─────────────────┴─────────────────┴─────────────────┘
@@ -58,10 +59,13 @@
 │  云端模型 (DashScope)          │  本地模型 (Ollama)                     │
 │  ├─ glm-5 (主选)               │  ├─ qwen3.6:35b (36B)                  │
 │  ├─ glm-4-plus (高级)          │  ├─ gemma4:31b                        │
-│  └─ qwen-turbo (快速)          │  └─ nomic-embed-text                  │
+│  └─ qwen-turbo (快速)          │  ├─ nomic-embed-text (实际使用) ★     │
+│                                │  └─ 备选: BGE-large-zh-v1.5 (1024维)  │
 │                                │                                        │
 │  用途: 复杂任务、联网搜索      │  用途: 敏感数据、断网降级              │
 │  成本: $0.001-0.004/1K tokens  │  成本: 免费                            │
+│                                │                                        │
+│  ★ 说明: 实际Embedding使用     │  nomic-embed-text因BGE加载失败降级    │
 └─────────────────────────────────────────────────────────────────────────┘
                                    │
                                    ▼
@@ -83,17 +87,20 @@
 | 决策点 | 选择 | 理因 |
 |-------|------|------|
 | 向量数据库 | ChromaDB | 轻量级、本地持久化、中文支持好 |
-| Embedding | BGE-large-zh-v1.5 | 中文优化、1024维高精度、本地GPU运行 |
+| Embedding (配置) | BGE-large-zh-v1.5 | 中文优化、1024维高精度、本地GPU运行 |
+| Embedding (实际) | nomic-embed-text ★ | BGE加载失败时自动降级、768维、Ollama本地 |
 | 检索策略 | 混合检索 (Vector+BM25+RRF) | 语义+关键词双保险、RRF融合最优召回 |
 | Agent框架 | LangGraph | 图结构、条件边循环、支持反思-修正 |
 | LLM后端 | 双后端 (DashScope+Ollama) | 国内直连无VPN + 断网降级韧性 |
 | 切分策略 | 父子切分 (1500/400字) | 精准检索+完整上下文兼顾 |
 
+★ 实际情况: ChromaDB中216条记录使用768维向量，表明Embedding降级为nomic-embed-text
+
 ### 1.4 数据产出统计
 
 | 类别 | 数量 | 存储 |
 |------|------|------|
-| 论文入库 | 87篇 | ChromaDB 1.9M |
+| 论文入库 | 216条chunks | ChromaDB (768维向量) |
 | 论文分析 | 31篇 | analyses/*.md 152K |
 | Transformer深度分析 | 1篇完整 | output/*.json/*.md 132K |
 | 审计记录 | 全流程 | SQLite 14表 |
@@ -240,12 +247,17 @@ SQLite持久化 → 14表Schema → 时间戳排序 → session_id关联
 
 | # | Agent名称 | 源文件 | 调用模型 | 职责 |
 |---|----------|--------|---------|------|
-| 1 | `PaperRetrievalAgent` | specialized_agents.py | BGE-large-zh (本地) | 向量检索、BM25、RRF融合 |
+| 1 | `PaperRetrievalAgent` | specialized_agents.py | nomic-embed-text (Ollama) ★ | 向量检索、BM25、RRF融合 |
 | 2 | `PaperAnalysisAgent` | specialized_agents.py | 规则匹配 | 公式提取、概念抽取 |
 | 3 | `QualityAssuranceAgent` | specialized_agents.py | 本地规则 | 幻觉检测、引用验证 |
 | 4 | `CodeReproductionAgent` | specialized_agents.py | 模板生成 | 代码模板生成 |
 | 5 | `SpecializedAgentOrchestrator` | specialized_agents.py | 无模型 | 编排四角色协作 |
 | 6 | `PaperRAGAgent` | paper_rag_agent.py | 待接入LLM | LangGraph 6节点工作流 |
+
+★ Embedding模型说明:
+- 配置主选: BGE-large-zh-v1.5 (1024维)
+- 实际使用: nomic-embed-text (768维) - BGE加载失败时自动降级
+- ChromaDB当前维度: 768 (验证实际使用的降级方案)
 
 ### 3.4 多代理 + 多模型协作矩阵
 
@@ -419,6 +431,7 @@ Dev Agent定位根因 ──▶ 分析失败原因 ──▶ 设计修复方案
 | 版本 | 日期 | 更新内容 | 作者 |
 |------|------|---------|------|
 | v1.0 | 2026-05-24 | 初始版本，完整项目总结 | Main Agent |
+| v1.1 | 2026-05-24 | 更新Embedding模型为实际使用的nomic-embed-text (768维) | Main Agent |
 
 ---
 
