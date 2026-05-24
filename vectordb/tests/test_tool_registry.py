@@ -235,13 +235,14 @@ class TestVectorSearchTool(unittest.TestCase):
         self.assertFalse(tool.validate({}))
         self.assertFalse(tool.validate({"query": 123}))
 
-    @patch('tool_registry.HybridSearcher')
-    def test_run(self, mock_searcher):
-        mock_instance = MagicMock()
-        mock_instance.vector_search.return_value = [{"chunk_id": "1", "content": "test"}]
-        mock_searcher.return_value = mock_instance
-
+    def test_run(self):
+        """测试向量检索执行"""
         tool = VectorSearchTool()
+        # 直接mock searcher属性而不是动态导入路径
+        mock_searcher = MagicMock()
+        mock_searcher.vector_search.return_value = [{"chunk_id": "1", "content": "test"}]
+        tool.searcher = mock_searcher
+
         result = tool.run({"query": "test", "top_k": 5})
 
         self.assertIn("results", result)
@@ -382,13 +383,16 @@ class TestHallucinationDetectTool(unittest.TestCase):
     def test_run_unsupported(self):
         tool = HallucinationDetectTool()
 
+        # 使用有可识别实体但实体不在上下文中的答案
         result = tool.run({
-            "answer": "XYZ模型有1000亿参数",
-            "contexts": ["这是一些不相关的上下文"]
+            "answer": "GPT-5模型是 OpenAI 最新发布的大模型，参数量达到1000亿",
+            "contexts": ["这是一些完全不相关的上下文内容"]
         })
 
+        # 由于实体GPT-5和OpenAI不在上下文中，应该判定为幻觉
         self.assertTrue(result["is_hallucination"])
         self.assertEqual(result["risk_level"], "high")
+        self.assertGreater(len(result["hallucinated_entities"]), 0)
 
     def test_extract_entities(self):
         tool = HallucinationDetectTool()

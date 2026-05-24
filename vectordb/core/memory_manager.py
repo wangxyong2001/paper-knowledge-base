@@ -171,7 +171,7 @@ class PaperMemoryManager:
             paper_id: 论文ID
 
         Returns:
-            分析历史列表
+            分析历史列表（仅当前会话的数据）
         """
         conn = self._get_connection()
         cursor = conn.cursor()
@@ -179,9 +179,9 @@ class PaperMemoryManager:
         cursor.execute("""
         SELECT id, session_id, paper_id, timestamp, summary, key_points, formulas, concepts, metadata
         FROM episodic_memory
-        WHERE paper_id = ?
+        WHERE paper_id = ? AND session_id = ?
         ORDER BY timestamp DESC
-        """, (paper_id,))
+        """, (paper_id, self.session_id))
 
         results = []
         for row in cursor.fetchall():

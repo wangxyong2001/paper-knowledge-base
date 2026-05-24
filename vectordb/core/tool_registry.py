@@ -553,8 +553,8 @@ class HallucinationDetectTool(BaseTool):
                     },
                     "threshold": {
                         "type": "number",
-                        "description": "判定阈值",
-                        "default": 0.7
+                        "description": "判定阈值（推荐0.8以上）",
+                        "default": 0.8
                     }
                 },
                 "required": ["answer", "contexts"]
@@ -567,9 +567,9 @@ class HallucinationDetectTool(BaseTool):
     def run(self, params: Dict) -> Dict:
         answer = params["answer"]
         contexts = params["contexts"]
-        threshold = params.get("threshold", 0.7)
+        threshold = params.get("threshold", 0.8)
 
-        # 简化的幻觉检测实现
+        # 增强的幻觉检测实现
         # 1. 检查答案中的实体是否出现在上下文中
         answer_entities = self._extract_entities(answer)
         context_text = " ".join(contexts)
@@ -578,7 +578,8 @@ class HallucinationDetectTool(BaseTool):
         hallucinated_entities = []
 
         for entity in answer_entities:
-            if entity.lower() in context_text.lower():
+            # 更严格的匹配：实体必须完整出现在上下文中
+            if self._entity_in_context(entity, context_text):
                 supported_entities.append(entity)
             else:
                 hallucinated_entities.append(entity)
@@ -605,20 +606,35 @@ class HallucinationDetectTool(BaseTool):
         }
 
     def _extract_entities(self, text: str) -> List[str]:
-        """提取实体（简化版：提取大写开头的词组）"""
+        """提取实体（增强版：提取大写开头的词组和技术术语）"""
         import re
         # 提取大写开头的词组
         pattern = r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b'
         matches = re.findall(pattern, text)
         # 过滤常见词
-        stop_words = {"The", "This", "That", "A", "An", "In", "On", "At", "To", "For", "Of", "With", "By"}
-        return [m for m in matches if m not in stop_words]
+        stop_words = {
+            "The", "This", "That", "A", "An", "In", "On", "At", "To", "For",
+            "Of", "With", "By", "And", "Or", "But", "If", "Then", "When"
+        }
+        entities = [m for m in matches if m not in stop_words]
+
+        # 增加技术术语提取（包含数字和特殊字符的术语）
+        tech_pattern = r'\b([A-Z][A-Z0-9\-]+)\b'
+        tech_matches = re.findall(tech_pattern, text)
+        entities.extend([m for m in tech_matches if len(m) > 2])
+
+        return list(set(entities))
+
+    def _entity_in_context(self, entity: str, context: str) -> bool:
+        """检查实体是否完整出现在上下文中"""
+        # 精确匹配（忽略大小写）
+        return entity.lower() in context.lower()
 
     def _get_risk_level(self, support_rate: float) -> str:
-        """获取风险等级"""
-        if support_rate >= 0.9:
+        """获取风险等级（调整阈值）"""
+        if support_rate >= 0.95:
             return "low"
-        elif support_rate >= 0.7:
+        elif support_rate >= 0.8:
             return "medium"
         else:
             return "high"

@@ -8,11 +8,13 @@
 import unittest
 import sys
 import os
+import sqlite3
+import uuid
 
 # 添加项目路径
 sys.path.insert(0, '/home/nvidia/workspace/paper/vectordb')
 
-from core.memory_manager import PaperMemoryManager, create_memory_manager
+from core.memory_manager import PaperMemoryManager, create_memory_manager, DB_PATH
 
 
 class TestPaperMemoryManager(unittest.TestCase):
@@ -21,8 +23,23 @@ class TestPaperMemoryManager(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """测试前初始化"""
-        cls.session_id = "test-session-001"
+        # 使用唯一的测试session_id前缀
+        cls.test_prefix = f"test_{uuid.uuid4().hex[:8]}_"
+        cls.session_id = f"{cls.test_prefix}session-001"
         cls.manager = PaperMemoryManager(cls.session_id)
+
+    @classmethod
+    def tearDownClass(cls):
+        """测试后清理所有测试数据"""
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        # 删除所有以测试前缀开头的session数据
+        cursor.execute(
+            "DELETE FROM episodic_memory WHERE session_id LIKE ?",
+            (f"{cls.test_prefix}%",)
+        )
+        conn.commit()
+        conn.close()
 
     def setUp(self):
         """每个测试前清空工作记忆"""
@@ -91,30 +108,33 @@ class TestPaperMemoryManager(unittest.TestCase):
 
     def test_get_episodic_by_paper(self):
         """测试根据论文ID获取情景记忆"""
+        # 使用唯一paper_id
+        paper_id = f"{self.test_prefix}paper-002"
         # 添加两条情景记忆
-        self.manager.add_episodic("paper-002", {
+        self.manager.add_episodic(paper_id, {
             "summary": "论文A摘要",
             "key_points": ["A1", "A2"],
             "formulas": [],
             "concepts": ["AI"]
         })
 
-        self.manager.add_episodic("paper-002", {
+        self.manager.add_episodic(paper_id, {
             "summary": "论文A更新摘要",
             "key_points": ["A3"],
             "formulas": [],
             "concepts": ["ML"]
         })
 
-        results = self.manager.get_episodic_by_paper("paper-002")
+        results = self.manager.get_episodic_by_paper(paper_id)
         self.assertEqual(len(results), 2)
 
     def test_get_episodic_by_session(self):
         """测试根据会话ID获取情景记忆"""
-        session_id = "test-session-002"
+        session_id = f"{self.test_prefix}session-002"
         manager2 = PaperMemoryManager(session_id)
+        paper_id = f"{self.test_prefix}paper-003"
 
-        manager2.add_episodic("paper-003", {
+        manager2.add_episodic(paper_id, {
             "summary": "论文B摘要",
             "key_points": ["B1"],
             "formulas": [],
@@ -123,21 +143,24 @@ class TestPaperMemoryManager(unittest.TestCase):
 
         results = manager2.get_episodic_by_session(session_id)
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0]["paper_id"], "paper-003")
+        self.assertEqual(results[0]["paper_id"], paper_id)
 
     # ==================== Semantic Memory Tests ====================
 
     def test_retrieve_relevant(self):
         """测试语义检索"""
-        # 添加情景记忆
-        self.manager.add_episodic("paper-004", {
+        # 使用唯一paper_id添加情景记忆
+        paper_id1 = f"{self.test_prefix}paper-004"
+        paper_id2 = f"{self.test_prefix}paper-005"
+
+        self.manager.add_episodic(paper_id1, {
             "summary": "深度学习在图像识别中的应用",
             "key_points": ["CNN模型", "ResNet结构"],
             "formulas": [],
             "concepts": ["深度学习", "计算机视觉"]
         })
 
-        self.manager.add_episodic("paper-005", {
+        self.manager.add_episodic(paper_id2, {
             "summary": "自然语言处理的Transformer模型",
             "key_points": ["注意力机制", "BERT"],
             "formulas": [],
@@ -154,8 +177,10 @@ class TestPaperMemoryManager(unittest.TestCase):
 
     def test_add_semantic_embedding(self):
         """测试添加向量embedding"""
+        # 使用唯一paper_id
+        paper_id = f"{self.test_prefix}paper-006"
         # 先添加情景记忆
-        self.manager.add_episodic("paper-006", {
+        self.manager.add_episodic(paper_id, {
             "summary": "测试摘要",
             "key_points": [],
             "formulas": [],
@@ -164,19 +189,22 @@ class TestPaperMemoryManager(unittest.TestCase):
 
         # 添加向量
         embedding = [0.1] * 128
-        success = self.manager.add_semantic_embedding("paper-006", embedding)
+        success = self.manager.add_semantic_embedding(paper_id, embedding)
         self.assertTrue(success)
 
     def test_get_all_episodic(self):
         """测试获取所有情景记忆"""
-        # 添加多条情景记忆
-        self.manager.add_episodic("paper-007", {
+        # 使用唯一paper_id添加多条情景记忆
+        paper_id1 = f"{self.test_prefix}paper-007"
+        paper_id2 = f"{self.test_prefix}paper-008"
+
+        self.manager.add_episodic(paper_id1, {
             "summary": "摘要1",
             "key_points": [],
             "formulas": [],
             "concepts": []
         })
-        self.manager.add_episodic("paper-008", {
+        self.manager.add_episodic(paper_id2, {
             "summary": "摘要2",
             "key_points": [],
             "formulas": [],
@@ -184,8 +212,10 @@ class TestPaperMemoryManager(unittest.TestCase):
         })
 
         # 跨会话再添加一条
-        manager2 = PaperMemoryManager("test-session-003")
-        manager2.add_episodic("paper-009", {
+        session_id3 = f"{self.test_prefix}session-003"
+        manager2 = PaperMemoryManager(session_id3)
+        paper_id3 = f"{self.test_prefix}paper-009"
+        manager2.add_episodic(paper_id3, {
             "summary": "摘要3",
             "key_points": [],
             "formulas": [],
@@ -199,27 +229,38 @@ class TestPaperMemoryManager(unittest.TestCase):
     # ==================== Cross-Session Tests ====================
 
     def test_cross_session_reuse(self):
-        """测试跨会话复用"""
+        """测试跨会话复用 - 注意：由于MEM-01修复了session_id过滤，此测试需要调整"""
+        # 此测试原意是测试跨会话复用，但修复后get_episodic_by_paper会过滤session_id
+        # 所以需要验证：同一paper_id在不同session下是隔离的
+        paper_id = f"{self.test_prefix}paper-cross-1"
+
         # 会话1: 添加情景记忆
-        session1 = PaperMemoryManager("session-A")
-        session1.add_episodic("paper-cross-1", {
-            "summary": "跨会话论文",
-            "key_points": ["跨会话要点"],
+        session_id1 = f"{self.test_prefix}session-A"
+        session1 = PaperMemoryManager(session_id1)
+        session1.add_episodic(paper_id, {
+            "summary": "会话A的论文",
+            "key_points": ["会话A要点"],
             "formulas": [],
             "concepts": ["测试"]
         })
 
-        # 会话2: 检索同一论文
-        session2 = PaperMemoryManager("session-B")
-        results = session2.get_episodic_by_paper("paper-cross-1")
+        # 会话2: 尝试检索同一论文 - 应该返回空（因为session_id不同）
+        session_id2 = f"{self.test_prefix}session-B"
+        session2 = PaperMemoryManager(session_id2)
+        results = session2.get_episodic_by_paper(paper_id)
 
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0]["summary"], "跨会话论文")
+        # 由于MEM-01修复，现在会过滤session_id，所以应该返回空
+        self.assertEqual(len(results), 0)
+
+        # 但会话1应该能找到自己的数据
+        results_session1 = session1.get_episodic_by_paper(paper_id)
+        self.assertEqual(len(results_session1), 1)
+        self.assertEqual(results_session1[0]["summary"], "会话A的论文")
 
     def test_working_memory_isolation(self):
         """测试工作记忆会话隔离"""
-        manager1 = PaperMemoryManager("session-1")
-        manager2 = PaperMemoryManager("session-2")
+        manager1 = PaperMemoryManager(f"{self.test_prefix}session-1")
+        manager2 = PaperMemoryManager(f"{self.test_prefix}session-2")
 
         # manager1添加工作记忆
         manager1.add_working_memory({"role": "user", "content": "会话1消息"})
@@ -229,8 +270,8 @@ class TestPaperMemoryManager(unittest.TestCase):
 
     def test_create_helper_function(self):
         """测试便捷创建函数"""
-        manager = create_memory_manager("helper-test")
-        self.assertEqual(manager.session_id, "helper-test")
+        manager = create_memory_manager(f"{self.test_prefix}helper-test")
+        self.assertEqual(manager.session_id, f"{self.test_prefix}helper-test")
 
         manager.add_working_memory({"role": "user", "content": "测试"})
         self.assertEqual(len(manager.get_working_memory()), 1)
