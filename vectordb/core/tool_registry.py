@@ -324,7 +324,7 @@ class VectorSearchTool(BaseTool):
             import sys
             sys.path.append('/home/nvidia/workspace/paper/vectordb/scripts')
             from search import HybridSearcher
-            self.searcher = HybridSearcher(use_bge=True)  # 使用BGE-M3模型
+            self.searcher = HybridSearcher(use_bge=False)  # 使用Ollama embedding (网络稳定性优先)
         return self.searcher
 
     def get_schema(self) -> Dict:
@@ -395,7 +395,7 @@ class BM25SearchTool(BaseTool):
             import sys
             sys.path.append('/home/nvidia/workspace/paper/vectordb/scripts')
             from search import HybridSearcher
-            self.searcher = HybridSearcher(use_bge=True)
+            self.searcher = HybridSearcher(use_bge=False)  # 使用Ollama embedding
         return self.searcher
 
     def get_schema(self) -> Dict:
@@ -464,7 +464,7 @@ class HybridSearchTool(BaseTool):
             import sys
             sys.path.append('/home/nvidia/workspace/paper/vectordb/scripts')
             from search import HybridSearcher
-            self.searcher = HybridSearcher(use_bge=True)
+            self.searcher = HybridSearcher(use_bge=False)  # 使用Ollama embedding
         return self.searcher
 
     def get_schema(self) -> Dict:

@@ -254,7 +254,7 @@ def main():
         return
 
     # 初始化添加器
-    adder = PaperAdder(use_bge=True)
+    adder = PaperAdder(use_bge=False)  # 使用Ollama embedding (网络稳定性优先)
 
     # 遍历analyses目录
     if not os.path.exists(ANALYSES_PATH):
@@ -285,7 +285,7 @@ def main():
             'arxiv_id': '',
             'category': 'unknown',
             'priority': 'medium',
-            'keywords': [],
+            'keywords': ['transformer'],  # ChromaDB不接受空列表，添加默认关键词
             'created_at': datetime.now().isoformat()
         }
 
