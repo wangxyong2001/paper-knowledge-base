@@ -1,8 +1,8 @@
 # 工作流测试问题日志
 
 > 测试日期: 2026-05-24
-> 测试状态: 中断（网络问题）
-> 测试者: Main Agent
+> 测试状态: 网络问题已解决，待需求方验证
+> 最后更新: 2026-05-24
 
 ---
 
@@ -34,6 +34,11 @@ Retrying in 2s [Retry 2/5].
 2. 使用离线embedding模型（Ollama本地）
 3. 配置网络代理
 
+**已解决**: ✅ 2026-05-24
+- 安装 `nomic-embed-text` (274MB, 768维)
+- 更新 `config.py`: `OLLAMA_EMBED_MODEL = "nomic-embed-text"`
+- Ollama embedding测试成功
+
 ---
 
 ### 问题2: 工作流测试未完整跑完
@@ -53,9 +58,10 @@ Retrying in 2s [Retry 2/5].
 
 | 问题ID | 问题类型 | 问题描述 | 影响 | 状态 | 解决方案 |
 |-------|---------|---------|------|------|---------|
-| NET-01 | 网络 | HuggingFace连接超时 | 向量检索阻塞 | 待解决 | 本地模型/代理 |
-| NET-02 | 网络 | Connection refused | embedding失败 | 待解决 | 网络配置 |
-| TEST-01 | 测试 | Pipeline未完整执行 | 验证中断 | 待解决 | 解决网络问题后重试 |
+| NET-01 | 网络 | HuggingFace连接超时 | 向量检索阻塞 | ✅ 已解决 | Ollama nomic-embed-text |
+| NET-02 | 网络 | Connection refused | embedding失败 | ✅ 已解决 | 本地模型替代 |
+| TEST-01 | 测试 | Pipeline未完整执行 | 验证中断 | 待解决 | 解决网络后重试 |
+| SYNTAX-01 | 代码 | SQLite NOT NOT语法错误 | 初始化失败 | ✅ 已解决 | 改为NOT NULL |
 
 ---
 
