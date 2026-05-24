@@ -113,7 +113,7 @@ class PaperMemoryManager:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id TEXT NOT NULL,
             paper_id TEXT NOT NULL,
-            timestamp TEXT NOT NOT,
+            timestamp TEXT NOT NULL,
 
             -- 论文分析内容：JSON序列化存储
             summary TEXT,

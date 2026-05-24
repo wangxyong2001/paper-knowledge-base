@@ -17,14 +17,15 @@ CHROMA_COLLECTION_NAME = "papers"
 CHROMA_PERSIST_DIR = CHROMA_DB_PATH
 
 # Embedding配置
-EMBEDDING_MODEL = "BAAI/bge-large-zh-v1.5"  # 主选：BGE中文优化
+EMBEDDING_MODEL = "BAAI/bge-large-zh-v1.5"  # 主选：BGE中文优化 (需网络)
 EMBEDDING_DIMENSION = 1024
 EMBEDDING_DEVICE = "cuda"  # 使用GPU
 
-# 备选Embedding (Ollama)
+# 备选Embedding (Ollama) - 当BGE不可用时使用
 OLLAMA_BASE_URL = "http://localhost:11434"
 OLLAMA_MODEL = "qwen3.6:35b"
-OLLAMA_EMBED_MODEL = "qwen3.6:35b"
+OLLAMA_EMBED_MODEL = "nomic-embed-text"  # 专用embedding模型 (768维)
+OLLAMA_EMBED_DIMENSION = 768
 
 # 切分策略配置
 CHUNK_STRATEGY = {
