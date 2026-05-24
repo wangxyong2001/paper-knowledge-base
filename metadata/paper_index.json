@@ -1,0 +1,744 @@
+{
+  "metadata": {
+    "created": "2026-05-24",
+    "total_papers": 87,
+    "categories": 12,
+    "purpose": "Paper learning index for Code as Agent Harness project"
+  },
+  "categories": {
+    "01_deepseek_series": {
+      "name": "DeepSeek Series",
+      "name_zh": "DeepSeek 系列",
+      "description": "DeepSeek model family: MoE architecture, reasoning, coding, multimodal",
+      "papers": [
+        {
+          "filename": "01-deepseekmoe-architecture-foundation.pdf",
+          "title": "DeepSeekMoE Architecture Foundation",
+          "keywords": ["MoE", "architecture", "sparse-activation"],
+          "priority": "high",
+          "relevance": "Foundation architecture for efficient inference"
+        },
+        {
+          "filename": "02-deepseek-math-reasoning.pdf",
+          "title": "DeepSeek Math Reasoning",
+          "keywords": ["math", "reasoning", "chain-of-thought"],
+          "priority": "high",
+          "relevance": "Reasoning capabilities for agent planning"
+        },
+        {
+          "filename": "03-deepseek-vl-multimodal.pdf",
+          "title": "DeepSeek VL Multimodal",
+          "keywords": ["vision-language", "multimodal", "encoder"],
+          "priority": "medium",
+          "relevance": "Multimodal understanding for agent perception"
+        },
+        {
+          "filename": "04-deepseek-prover-v1.pdf",
+          "title": "DeepSeek Prover V1",
+          "keywords": ["theorem-proving", "formal-verification", "Lean"],
+          "priority": "medium",
+          "relevance": "Formal verification for code correctness"
+        },
+        {
+          "filename": "05-deepseek-prover-v1.5.pdf",
+          "title": "DeepSeek Prover V1.5",
+          "keywords": ["theorem-proving", "improvements"],
+          "priority": "medium",
+          "relevance": "Incremental improvements in formal verification"
+        },
+        {
+          "filename": "06-deepseek-prover-v2.pdf",
+          "title": "DeepSeek Prover V2",
+          "keywords": ["theorem-proving", "scaling"],
+          "priority": "high",
+          "relevance": "Latest advances in formal verification"
+        },
+        {
+          "filename": "07-deepseek-math-v2.pdf",
+          "title": "DeepSeek Math V2",
+          "keywords": ["math", "reasoning", "scaling"],
+          "priority": "high",
+          "relevance": "Enhanced reasoning capabilities"
+        },
+        {
+          "filename": "08-deepseek-coder-v2.pdf",
+          "title": "DeepSeek Coder V2",
+          "keywords": ["code-generation", "programming", "MoE"],
+          "priority": "critical",
+          "relevance": "Code generation for agent implementation"
+        },
+        {
+          "filename": "deepseek-coder-technical-report.pdf",
+          "title": "DeepSeek Coder Technical Report",
+          "keywords": ["technical-report", "code-generation"],
+          "priority": "high",
+          "relevance": "Comprehensive coder model details"
+        },
+        {
+          "filename": "deepseek-r1-technical-report.pdf",
+          "title": "DeepSeek R1 Technical Report",
+          "keywords": ["reasoning", "RL", "chain-of-thought"],
+          "priority": "critical",
+          "relevance": "State-of-art reasoning model, essential for agent planning"
+        },
+        {
+          "filename": "deepseek-v2-technical-report.pdf",
+          "title": "DeepSeek V2 Technical Report",
+          "keywords": ["architecture", "MoE", "efficiency"],
+          "priority": "high",
+          "relevance": "Architecture innovations for efficiency"
+        },
+        {
+          "filename": "deepseek-v3-technical-report.pdf",
+          "title": "DeepSeek V3 Technical Report",
+          "keywords": ["latest", "scaling", "efficiency"],
+          "priority": "critical",
+          "relevance": "Latest model architecture and capabilities"
+        }
+      ],
+      "total": 12,
+      "priority_papers": ["deepseek-r1-technical-report.pdf", "deepseek-v3-technical-report.pdf", "08-deepseek-coder-v2.pdf"]
+    },
+    "02_kimi_series": {
+      "name": "Kimi Series",
+      "name_zh": "Kimi 系列",
+      "description": "Moonshot AI's Kimi model family: agentic intelligence, multimodal",
+      "papers": [
+        {
+          "filename": "01-kimi-k2-open-agentic-intelligence.pdf",
+          "title": "Kimi K2 Open Agentic Intelligence",
+          "keywords": ["agent", "open-source", "agentic"],
+          "priority": "critical",
+          "relevance": "Agentic intelligence design patterns"
+        },
+        {
+          "filename": "02-kimi-k2.5-visual-agentic-intelligence.pdf",
+          "title": "Kimi K2.5 Visual Agentic Intelligence",
+          "keywords": ["visual-agent", "multimodal"],
+          "priority": "high",
+          "relevance": "Visual agent architecture"
+        },
+        {
+          "filename": "03-kimi-linear-attention-architecture.pdf",
+          "title": "Kimi Linear Attention Architecture",
+          "keywords": ["linear-attention", "efficiency", "architecture"],
+          "priority": "medium",
+          "relevance": "Efficient attention mechanisms"
+        },
+        {
+          "filename": "04-kimi-dev-swe-agents.pdf",
+          "title": "Kimi Dev SWE Agents",
+          "keywords": ["software-engineering", "agent", "coding"],
+          "priority": "critical",
+          "relevance": "SWE agent design, directly applicable to Code as Agent"
+        },
+        {
+          "filename": "05-kimi-vl-technical-report.pdf",
+          "title": "Kimi VL Technical Report",
+          "keywords": ["vision-language", "multimodal"],
+          "priority": "medium",
+          "relevance": "Multimodal agent perception"
+        },
+        {
+          "filename": "06-kimi-audio-technical-report.pdf",
+          "title": "Kimi Audio Technical Report",
+          "keywords": ["audio", "speech", "multimodal"],
+          "priority": "low",
+          "relevance": "Audio capabilities for multimodal agents"
+        }
+      ],
+      "total": 6,
+      "priority_papers": ["01-kimi-k2-open-agentic-intelligence.pdf", "04-kimi-dev-swe-agents.pdf"]
+    },
+    "03_qwen_series": {
+      "name": "Qwen Series",
+      "name_zh": "Qwen 系列",
+      "description": "Alibaba's Qwen model family: coding, ASR, TTS, vision",
+      "papers": [
+        {
+          "filename": "01-qwen3-coder-next.pdf",
+          "title": "Qwen3 Coder Next",
+          "keywords": ["code-generation", "next-gen"],
+          "priority": "critical",
+          "relevance": "Latest code generation model"
+        },
+        {
+          "filename": "02-qwen3-asr.pdf",
+          "title": "Qwen3 ASR",
+          "keywords": ["ASR", "speech-recognition"],
+          "priority": "medium",
+          "relevance": "Speech input for agents"
+        },
+        {
+          "filename": "03-qwen3-tts.pdf",
+          "title": "Qwen3 TTS",
+          "keywords": ["TTS", "speech-synthesis"],
+          "priority": "medium",
+          "relevance": "Speech output for agents"
+        },
+        {
+          "filename": "04-qwen3-vl-embedding.pdf",
+          "title": "Qwen3 VL Embedding",
+          "keywords": ["vision-language", "embedding"],
+          "priority": "medium",
+          "relevance": "Multimodal embeddings"
+        },
+        {
+          "filename": "05-qwen-image.pdf",
+          "title": "Qwen Image",
+          "keywords": ["image-generation", "visual"],
+          "priority": "medium",
+          "relevance": "Image generation capabilities"
+        },
+        {
+          "filename": "06-qwen-image-layered.pdf",
+          "title": "Qwen Image Layered",
+          "keywords": ["image-generation", "layered"],
+          "priority": "low",
+          "relevance": "Advanced image generation"
+        }
+      ],
+      "total": 6,
+      "priority_papers": ["01-qwen3-coder-next.pdf"]
+    },
+    "04_wan_video_generation": {
+      "name": "Wan Video Generation",
+      "name_zh": "Wan 视频生成系列",
+      "description": "Alibaba's Wan series: video generation, motion control",
+      "papers": [
+        {
+          "filename": "01-wan-image-generative-visual.pdf",
+          "title": "Wan Image Generative Visual",
+          "keywords": ["image-generation", "visual"],
+          "priority": "medium",
+          "relevance": "Foundation for visual generation"
+        },
+        {
+          "filename": "02-wan-r1-video-reasoning.pdf",
+          "title": "Wan R1 Video Reasoning",
+          "keywords": ["video", "reasoning", "generation"],
+          "priority": "high",
+          "relevance": "Reasoning in video generation"
+        },
+        {
+          "filename": "03-wan-weaver-multimodal.pdf",
+          "title": "Wan Weaver Multimodal",
+          "keywords": ["multimodal", "video"],
+          "priority": "medium",
+          "relevance": "Multimodal video generation"
+        },
+        {
+          "filename": "04-wan-move-motion-control.pdf",
+          "title": "Wan Move Motion Control",
+          "keywords": ["motion-control", "video"],
+          "priority": "medium",
+          "relevance": "Controlled video generation"
+        },
+        {
+          "filename": "05-wan-animate-character.pdf",
+          "title": "Wan Animate Character",
+          "keywords": ["animation", "character"],
+          "priority": "medium",
+          "relevance": "Character animation"
+        },
+        {
+          "filename": "06-wan-s2v-audio-driven.pdf",
+          "title": "Wan S2V Audio Driven",
+          "keywords": ["audio-to-video", "generation"],
+          "priority": "low",
+          "relevance": "Audio-driven video generation"
+        }
+      ],
+      "total": 6,
+      "priority_papers": ["02-wan-r1-video-reasoning.pdf"]
+    },
+    "05_ltx_video": {
+      "name": "LTX Video",
+      "name_zh": "LTX 视频系列",
+      "description": "LTX video generation: real-time, audio-visual",
+      "papers": [
+        {
+          "filename": "01-ltx-video-realtime-latent-diffusion.pdf",
+          "title": "LTX Video Realtime Latent Diffusion",
+          "keywords": ["real-time", "latent-diffusion", "video"],
+          "priority": "high",
+          "relevance": "Real-time video generation efficiency"
+        },
+        {
+          "filename": "02-ltx-2-audio-visual-foundation.pdf",
+          "title": "LTX 2 Audio Visual Foundation",
+          "keywords": ["audio-visual", "foundation"],
+          "priority": "medium",
+          "relevance": "Audio-visual foundation model"
+        }
+      ],
+      "total": 2,
+      "priority_papers": ["01-ltx-video-realtime-latent-diffusion.pdf"]
+    },
+    "06_agent_systems": {
+      "name": "Agent / Multi-Agent Systems",
+      "name_zh": "Agent / 多智能体系统",
+      "description": "Agent architecture, multi-agent coordination, reasoning",
+      "papers": [
+        {
+          "filename": "01-realm-retrieve-adaptive-reasoning.pdf",
+          "title": "REALM Retrieve Adaptive Reasoning",
+          "keywords": ["retrieval", "reasoning", "adaptive"],
+          "priority": "high",
+          "relevance": "Retrieval-augmented reasoning for agents"
+        },
+        {
+          "filename": "02-ssrp-self-synthesizing-reasoning.pdf",
+          "title": "SSRP Self Synthesizing Reasoning",
+          "keywords": ["self-synthesizing", "reasoning"],
+          "priority": "high",
+          "relevance": "Self-improving agent reasoning"
+        },
+        {
+          "filename": "ace-agentic-context-engineering-2510.04618.pdf",
+          "title": "ACE Agentic Context Engineering",
+          "keywords": ["context", "engineering", "agent"],
+          "priority": "critical",
+          "relevance": "Context engineering for agents, directly applicable"
+        },
+        {
+          "filename": "agency-agents-feasibility-analysis.pdf",
+          "title": "Agency Agents Feasibility Analysis",
+          "keywords": ["agency", "feasibility"],
+          "priority": "medium",
+          "relevance": "Agent feasibility study"
+        },
+        {
+          "filename": "08-prompting-multiagent-comparison.pdf",
+          "title": "Prompting MultiAgent Comparison",
+          "keywords": ["multi-agent", "prompting", "comparison"],
+          "priority": "high",
+          "relevance": "Multi-agent coordination strategies"
+        },
+        {
+          "filename": "10-heterogeneous-multiagent-vulndet.pdf",
+          "title": "Heterogeneous MultiAgent VulnDet",
+          "keywords": ["multi-agent", "heterogeneous", "security"],
+          "priority": "medium",
+          "relevance": "Heterogeneous agent collaboration"
+        },
+        {
+          "filename": "mcp-zero-2506.01056.pdf",
+          "title": "MCP Zero",
+          "keywords": ["MCP", "tool-use", "agent"],
+          "priority": "critical",
+          "relevance": "MCP protocol for agent tools, directly applicable to project"
+        }
+      ],
+      "total": 7,
+      "priority_papers": ["mcp-zero-2506.01056.pdf", "ace-agentic-context-engineering-2510.04618.pdf", "08-prompting-multiagent-comparison.pdf"]
+    },
+    "07_rag_systems": {
+      "name": "RAG / Retrieval Augmented",
+      "name_zh": "RAG 检索增强",
+      "description": "Retrieval-augmented generation, dynamic retrieval",
+      "papers": [
+        {
+          "filename": "efficientrag-2501.15228.pdf",
+          "title": "EfficientRAG",
+          "keywords": ["efficient", "RAG", "retrieval"],
+          "priority": "high",
+          "relevance": "Efficient retrieval for agent memory"
+        },
+        {
+          "filename": "rag-gym-2502.13957.pdf",
+          "title": "RAG Gym",
+          "keywords": ["RAG", "training", "benchmark"],
+          "priority": "medium",
+          "relevance": "RAG training methodology"
+        },
+        {
+          "filename": "dynamic-cheatsheet-2504.07952.pdf",
+          "title": "Dynamic Cheatsheet",
+          "keywords": ["dynamic", "retrieval", "context"],
+          "priority": "high",
+          "relevance": "Dynamic context management for agents"
+        }
+      ],
+      "total": 3,
+      "priority_papers": ["efficientrag-2501.15228.pdf", "dynamic-cheatsheet-2504.07952.pdf"]
+    },
+    "08_security_vulnerability": {
+      "name": "Security / Vulnerability Detection",
+      "name_zh": "安全 / 漏洞检测",
+      "description": "Security analysis, vulnerability detection, backdoor attacks",
+      "papers": [
+        {
+          "filename": "04-multivul-vulnerability-detection.pdf",
+          "title": "MultiVul Vulnerability Detection",
+          "keywords": ["vulnerability", "detection", "multi"],
+          "priority": "high",
+          "relevance": "Agent security audit capabilities"
+        },
+        {
+          "filename": "11-backdoor-attacks.pdf",
+          "title": "Backdoor Attacks",
+          "keywords": ["backdoor", "security", "attacks"],
+          "priority": "medium",
+          "relevance": "Security awareness for agent systems"
+        },
+        {
+          "filename": "15-password-security-eyetracking.pdf",
+          "title": "Password Security Eyetracking",
+          "keywords": ["password", "security", "ux"],
+          "priority": "low",
+          "relevance": "User security considerations"
+        }
+      ],
+      "total": 3,
+      "priority_papers": ["04-multivul-vulnerability-detection.pdf"]
+    },
+    "09_code_engineering": {
+      "name": "Code Engineering",
+      "name_zh": "代码工程",
+      "description": "Code generation, debugging, review, repair",
+      "papers": [
+        {
+          "filename": "06-debugrepair-automated-repair.pdf",
+          "title": "DebugRepair Automated Repair",
+          "keywords": ["debug", "repair", "automated"],
+          "priority": "high",
+          "relevance": "Automated debugging for agent systems"
+        },
+        {
+          "filename": "09-code-review-classification.pdf",
+          "title": "Code Review Classification",
+          "keywords": ["code-review", "classification"],
+          "priority": "medium",
+          "relevance": "Code quality assessment"
+        },
+        {
+          "filename": "12-webgen-r1.pdf",
+          "title": "WebGen R1",
+          "keywords": ["web-generation", "code"],
+          "priority": "medium",
+          "relevance": "Web code generation"
+        },
+        {
+          "filename": "16-dsl-code-generation.pdf",
+          "title": "DSL Code Generation",
+          "keywords": ["DSL", "code-generation"],
+          "priority": "medium",
+          "relevance": "Domain-specific code generation"
+        },
+        {
+          "filename": "swe-pruner-2601.16746.pdf",
+          "title": "SWE Pruner",
+          "keywords": ["SWE", "pruning", "code"],
+          "priority": "high",
+          "relevance": "Software engineering optimization"
+        }
+      ],
+      "total": 5,
+      "priority_papers": ["06-debugrepair-automated-repair.pdf", "swe-pruner-2601.16746.pdf"]
+    },
+    "10_architecture_efficiency": {
+      "name": "Architecture / Efficiency",
+      "name_zh": "架构 / 效率优化",
+      "description": "Model architecture innovations, efficiency improvements",
+      "papers": [
+        {
+          "filename": "03-scaling-multi-node-moe.pdf",
+          "title": "Scaling Multi-Node MoE",
+          "keywords": ["MoE", "scaling", "distributed"],
+          "priority": "high",
+          "relevance": "Distributed MoE for scaling agents"
+        },
+        {
+          "filename": "05-gvr-sparse-attention.pdf",
+          "title": "GVR Sparse Attention",
+          "keywords": ["sparse-attention", "efficiency"],
+          "priority": "medium",
+          "relevance": "Efficient attention for long contexts"
+        },
+        {
+          "filename": "recursive-language-models-2512.24601.pdf",
+          "title": "Recursive Language Models",
+          "keywords": ["recursive", "architecture"],
+          "priority": "high",
+          "relevance": "Novel architecture for reasoning"
+        },
+        {
+          "filename": "transformer-paper-brief.pdf",
+          "title": "Transformer Paper Brief",
+          "keywords": ["transformer", "architecture"],
+          "priority": "low",
+          "relevance": "Foundation architecture reference"
+        },
+        {
+          "filename": "Transformer_Paper_Explained.pdf",
+          "title": "Transformer Paper Explained",
+          "keywords": ["transformer", "explanation"],
+          "priority": "low",
+          "relevance": "Educational reference"
+        }
+      ],
+      "total": 5,
+      "priority_papers": ["03-scaling-multi-node-moe.pdf", "recursive-language-models-2512.24601.pdf"]
+    },
+    "11_formal_verification": {
+      "name": "Formal Verification / Math",
+      "name_zh": "形式验证 / 数学",
+      "description": "Theorem proving, formal methods, Lean",
+      "papers": [
+        {
+          "filename": "14-llms-lean-formalization.pdf",
+          "title": "LLMs Lean Formalization",
+          "keywords": ["Lean", "formalization", "theorem"],
+          "priority": "high",
+          "relevance": "Formal methods for code verification"
+        },
+        {
+          "filename": "13-ul-xcot-crosslingual.pdf",
+          "title": "UL XCOT Crosslingual",
+          "keywords": ["crosslingual", "reasoning"],
+          "priority": "medium",
+          "relevance": "Crosslingual reasoning capabilities"
+        }
+      ],
+      "total": 2,
+      "priority_papers": ["14-llms-lean-formalization.pdf"]
+    },
+    "12_other_research": {
+      "name": "Other Research",
+      "name_zh": "其他研究",
+      "description": "Miscellaneous papers, benchmarks, evaluations",
+      "papers": [
+        {
+          "filename": "07-densestep2m-video-annotation.pdf",
+          "title": "DenseStep2M Video Annotation",
+          "keywords": ["video", "annotation"],
+          "priority": "low",
+          "relevance": "Video annotation methodology"
+        },
+        {
+          "filename": "claude-mythos-deep-learning.pdf",
+          "title": "Claude Mythos Deep Learning",
+          "keywords": ["claude", "deep-learning", "philosophy"],
+          "priority": "high",
+          "relevance": "Understanding Claude's development philosophy"
+        },
+        {
+          "filename": "anthropic-evals-brutalist-report.pdf",
+          "title": "Anthropic Evals Brutalist Report",
+          "keywords": ["evaluation", "anthropic"],
+          "priority": "medium",
+          "relevance": "Evaluation methodology for agents"
+        },
+        {
+          "filename": "2026-03-13-ai-daily-brief.pdf",
+          "title": "AI Daily Brief 2026-03-13",
+          "keywords": ["brief", "news"],
+          "priority": "low",
+          "relevance": "News reference"
+        },
+        {
+          "filename": "AI-Weekly-Brief-2026-W11.pdf",
+          "title": "AI Weekly Brief 2026 W11",
+          "keywords": ["weekly", "brief"],
+          "priority": "low",
+          "relevance": "Weekly news reference"
+        },
+        {
+          "filename": "AI-Weekly-Brief-2026-W11-with-links.pdf",
+          "title": "AI Weekly Brief 2026 W11 With Links",
+          "keywords": ["weekly", "brief", "links"],
+          "priority": "low",
+          "relevance": "Weekly news with references"
+        },
+        {
+          "filename": "ai-video-cost-comparison.pdf",
+          "title": "AI Video Cost Comparison",
+          "keywords": ["video", "cost", "comparison"],
+          "priority": "low",
+          "relevance": "Cost analysis reference"
+        }
+      ],
+      "total": 7,
+      "priority_papers": ["claude-mythos-deep-learning.pdf", "anthropic-evals-brutalist-report.pdf"]
+    },
+    "13_arxiv_uncategorized": {
+      "name": "arXiv Uncategorized",
+      "name_zh": "arXiv 未分类",
+      "description": "Papers identified by arXiv ID, pending categorization",
+      "papers": [
+        {"filename": "2304.13734.pdf", "title": "arXiv:2304.13734", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2405.15793.pdf", "title": "arXiv:2405.15793", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2406.07155.pdf", "title": "arXiv:2406.07155", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2406.12045.pdf", "title": "arXiv:2406.12045", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2407.16741.pdf", "title": "arXiv:2407.16741", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2501.01652.pdf", "title": "arXiv:2501.01652", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2502.07866.pdf", "title": "arXiv:2502.07866", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2505.22338.pdf", "title": "arXiv:2505.22338", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2506.20803.pdf", "title": "arXiv:2506.20803", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2508.08322.pdf", "title": "arXiv:2508.08322", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2509.14744.pdf", "title": "arXiv:2509.14744", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2511.09268.pdf", "title": "arXiv:2511.09268", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2601.20404.pdf", "title": "arXiv:2601.20404", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2602.07432.pdf", "title": "arXiv:2602.07432", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2602.11988.pdf", "title": "arXiv:2602.11988", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2602.12311.pdf", "title": "arXiv:2602.12311", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2602.17221.pdf", "title": "arXiv:2602.17221", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2603.11245.pdf", "title": "arXiv:2603.11245", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2603.12273.pdf", "title": "arXiv:2603.12273", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2603.26177.pdf", "title": "arXiv:2603.26177", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2603.28052.pdf", "title": "arXiv:2603.28052", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2604.14228.pdf", "title": "arXiv:2604.14228", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"},
+        {"filename": "2604.18071.pdf", "title": "arXiv:2604.18071", "keywords": [], "priority": "unknown", "relevance": "Needs analysis"}
+      ],
+      "total": 23,
+      "priority_papers": []
+    }
+  },
+  "learning_paths": {
+    "path_1_code_as_agent": {
+      "name": "Code as Agent Harness Path",
+      "description": "Essential papers for understanding and implementing code-driven agents",
+      "papers": [
+        "mcp-zero-2506.01056.pdf",
+        "ace-agentic-context-engineering-2510.04618.pdf",
+        "01-kimi-k2-open-agentic-intelligence.pdf",
+        "04-kimi-dev-swe-agents.pdf",
+        "deepseek-r1-technical-report.pdf",
+        "08-deepseek-coder-v2.pdf",
+        "01-qwen3-coder-next.pdf",
+        "06-debugrepair-automated-repair.pdf"
+      ],
+      "estimated_time": "2-3 weeks",
+      "priority": "critical"
+    },
+    "path_2_reasoning_planning": {
+      "name": "Reasoning and Planning Path",
+      "description": "Papers on agent reasoning, planning, and chain-of-thought",
+      "papers": [
+        "deepseek-r1-technical-report.pdf",
+        "02-deepseek-math-reasoning.pdf",
+        "07-deepseek-math-v2.pdf",
+        "01-realm-retrieve-adaptive-reasoning.pdf",
+        "02-ssrp-self-synthesizing-reasoning.pdf",
+        "recursive-language-models-2512.24601.pdf"
+      ],
+      "estimated_time": "1-2 weeks",
+      "priority": "high"
+    },
+    "path_3_architecture_efficiency": {
+      "name": "Architecture and Efficiency Path",
+      "description": "Model architecture innovations for efficient agent deployment",
+      "papers": [
+        "01-deepseekmoe-architecture-foundation.pdf",
+        "03-scaling-multi-node-moe.pdf",
+        "03-kimi-linear-attention-architecture.pdf",
+        "deepseek-v3-technical-report.pdf",
+        "05-gvr-sparse-attention.pdf"
+      ],
+      "estimated_time": "1-2 weeks",
+      "priority": "medium"
+    },
+    "path_4_security_safety": {
+      "name": "Security and Safety Path",
+      "description": "Security considerations for agent systems",
+      "papers": [
+        "04-multivul-vulnerability-detection.pdf",
+        "11-backdoor-attacks.pdf",
+        "06-deepseek-prover-v2.pdf",
+        "14-llms-lean-formalization.pdf"
+      ],
+      "estimated_time": "1 week",
+      "priority": "medium"
+    },
+    "path_5_multimodal_video": {
+      "name": "Multimodal and Video Path",
+      "description": "Multimodal understanding and video generation",
+      "papers": [
+        "03-deepseek-vl-multimodal.pdf",
+        "01-ltx-video-realtime-latent-diffusion.pdf",
+        "02-wan-r1-video-reasoning.pdf",
+        "05-kimi-vl-technical-report.pdf"
+      ],
+      "estimated_time": "1-2 weeks",
+      "priority": "low"
+    }
+  },
+  "high_value_papers": [
+    {
+      "filename": "deepseek-r1-technical-report.pdf",
+      "reason": "State-of-art reasoning model, essential for agent planning",
+      "category": "01_deepseek_series"
+    },
+    {
+      "filename": "deepseek-v3-technical-report.pdf",
+      "reason": "Latest model architecture with efficiency innovations",
+      "category": "01_deepseek_series"
+    },
+    {
+      "filename": "08-deepseek-coder-v2.pdf",
+      "reason": "Code generation capabilities for agent implementation",
+      "category": "01_deepseek_series"
+    },
+    {
+      "filename": "mcp-zero-2506.01056.pdf",
+      "reason": "MCP protocol directly applicable to Code as Agent Harness project",
+      "category": "06_agent_systems"
+    },
+    {
+      "filename": "ace-agentic-context-engineering-2510.04618.pdf",
+      "reason": "Context engineering patterns for agent systems",
+      "category": "06_agent_systems"
+    },
+    {
+      "filename": "01-kimi-k2-open-agentic-intelligence.pdf",
+      "reason": "Open-source agentic intelligence design patterns",
+      "category": "02_kimi_series"
+    },
+    {
+      "filename": "04-kimi-dev-swe-agents.pdf",
+      "reason": "SWE agent design directly applicable to code agents",
+      "category": "02_kimi_series"
+    },
+    {
+      "filename": "01-qwen3-coder-next.pdf",
+      "reason": "Latest code generation model from Qwen family",
+      "category": "03_qwen_series"
+    },
+    {
+      "filename": "claude-mythos-deep-learning.pdf",
+      "reason": "Understanding Claude development philosophy for agent design",
+      "category": "12_other_research"
+    },
+    {
+      "filename": "recursive-language-models-2512.24601.pdf",
+      "reason": "Novel architecture for enhanced reasoning",
+      "category": "10_architecture_efficiency"
+    }
+  ],
+  "statistics": {
+    "total_papers": 87,
+    "by_priority": {
+      "critical": 10,
+      "high": 18,
+      "medium": 20,
+      "low": 12,
+      "unknown": 27
+    },
+    "by_category": {
+      "DeepSeek Series": 12,
+      "Kimi Series": 6,
+      "Qwen Series": 6,
+      "Wan Video": 6,
+      "LTX Video": 2,
+      "Agent Systems": 7,
+      "RAG Systems": 3,
+      "Security": 3,
+      "Code Engineering": 5,
+      "Architecture": 5,
+      "Formal Verification": 2,
+      "Other": 7,
+      "Uncategorized": 23
+    }
+  }
+}

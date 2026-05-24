@@ -1,0 +1,160 @@
+{
+  "paper_id": "transformer-1706.03762",
+  "title": "Attention Is All You Need",
+  "title_zh": "注意力机制就是你需要的全部",
+  "authors": ["Google Brain"],
+  "year": 2017,
+  "arxiv_id": "1706.03762",
+  "category": "architecture",
+  "priority": "critical",
+  "keywords": [
+    "Transformer",
+    "Self-Attention",
+    "Multi-Head Attention",
+    "Encoder-Decoder",
+    "Positional Encoding",
+    "并行计算"
+  ],
+
+  "core_concepts": [
+    {
+      "name": "Self-Attention",
+      "name_zh": "自注意力机制",
+      "formula": "Attention(Q,K,V) = softmax(QK^T/√d_k)V",
+      "intuition": "让每个词都能关注句子里其他相关的词，不管距离多远",
+      "analogy": "Query=我在找什么, Key=你有什么, Value=那我拿走你有的东西"
+    },
+    {
+      "name": "Multi-Head Attention",
+      "name_zh": "多头注意力",
+      "formula": "MultiHead(Q,K,V) = Concat(head_1,...,head_h)W^O",
+      "intuition": "同时从多个角度理解句子",
+      "analogy": "多个侦探同时从不同角度调查案件"
+    },
+    {
+      "name": "Positional Encoding",
+      "name_zh": "位置编码",
+      "formula": "PE(pos,2i) = sin(pos/10000^(2i/d))",
+      "intuition": "让模型知道词的先后顺序",
+      "analogy": "给每个词发带编号的工牌"
+    }
+  ],
+
+  "architecture": {
+    "type": "Encoder-Decoder",
+    "encoder_layers": 6,
+    "decoder_layers": 6,
+    "d_model": 512,
+    "n_heads": 8,
+    "d_ff": 2048,
+    "components": [
+      "Multi-Head Attention",
+      "Feed Forward Network",
+      "Layer Normalization",
+      "Residual Connection"
+    ]
+  },
+
+  "problems_solved": [
+    {
+      "problem": "RNN不能并行计算",
+      "solution": "Transformer可并行处理整个序列",
+      "improvement": "训练速度提升10倍以上"
+    },
+    {
+      "problem": "长序列遗忘问题",
+      "solution": "Self-Attention直接连接任意距离",
+      "improvement": "无遗忘问题"
+    }
+  ],
+
+  "impact": {
+    "historical_position": "易筋经 - 打通任督二脉",
+    "derived_models": [
+      "GPT系列",
+      "BERT",
+      "Claude",
+      "Llama",
+      "Qwen"
+    ],
+    "applications": [
+      "机器翻译",
+      "文本生成",
+      "图像处理(ViT)",
+      "语音识别(Whisper)",
+      "蛋白质预测(AlphaFold2)",
+      "代码生成(Copilot)"
+    ]
+  },
+
+  "code_modules": [
+    {
+      "module": "PositionalEncoding",
+      "purpose": "位置编码",
+      "inputs": ["seq_len", "d_model"],
+      "outputs": ["pos_encoding"]
+    },
+    {
+      "module": "SelfAttention",
+      "purpose": "自注意力计算",
+      "inputs": ["Q", "K", "V"],
+      "outputs": ["attention_output"],
+      "key_formula": "softmax(QK^T/√d_k)V"
+    },
+    {
+      "module": "MultiHeadAttention",
+      "purpose": "多头注意力",
+      "inputs": ["x", "n_heads"],
+      "outputs": ["multi_head_output"]
+    },
+    {
+      "module": "EncoderLayer",
+      "purpose": "编码器层",
+      "inputs": ["x"],
+      "outputs": ["encoded"],
+      "components": ["MultiHeadAttention", "FFN", "LayerNorm", "Residual"]
+    },
+    {
+      "module": "DecoderLayer",
+      "purpose": "解码器层",
+      "inputs": ["x", "encoder_output"],
+      "outputs": ["decoded"],
+      "components": ["SelfAttention", "CrossAttention", "FFN"]
+    },
+    {
+      "module": "Transformer",
+      "purpose": "完整模型",
+      "inputs": ["src", "tgt"],
+      "outputs": ["output"]
+    }
+  ],
+
+  "test_cases": [
+    {
+      "name": "shape_test",
+      "description": "验证输出形状正确",
+      "input_shape": "[batch, seq_len, d_model]",
+      "expected_output_shape": "[batch, seq_len, d_model]"
+    },
+    {
+      "name": "gradient_flow_test",
+      "description": "验证反向传播梯度流",
+      "check": "所有参数grad不为None"
+    },
+    {
+      "name": "attention_weights_test",
+      "description": "验证注意力权重归一化",
+      "check": "softmax输出总和为1"
+    }
+  ],
+
+  "rag_relation": {
+    "embedding_role": "BERT/Transformer编码器生成Embedding",
+    "similarity_calculation": "注意力机制计算语义相似度",
+    "context_understanding": "Self-Attention理解上下文关系",
+    "analogy": "Q=用户查询, K=chunk特征, V=chunk内容"
+  },
+
+  "analysis_file": "/home/nvidia/workspace/paper/analyses/transformer-解读.md",
+  "created_at": "2026-05-24"
+}
