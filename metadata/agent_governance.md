@@ -517,7 +517,206 @@ Main Agent维护所有Agent的注册信息：
 
 ---
 
-**制度版本**: v1.0
+---
+
+## 十二、问题追踪治理规则 (新增 2026-05-25)
+
+### 12.1 问题生命周期治理
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   问题追踪闭环治理                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  QA Agent 发现 → 创建问题记录 → Dev Agent 修复 → Incident 监控│
+│                                                             │
+│  5项规范内容:                                                │
+│  ├─ 问题背景 (Background): 论文上下文、代码位置              │
+│  ├─ 影响评估 (Impact): 范围、描述、受影响组件                 │
+│  ├─ 根因分析 (Root Cause): 类型、详情、分析方法              │
+│  ├─ 纠正措施 (Corrective): 修复策略、执行者、期限             │
+│  └─ 预防措施 (Preventive): 测试覆盖、文档更新                │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 12.2 问题状态流转规则
+
+| 状态 | 责任 Agent | 允许操作 | 超时告警 |
+|------|----------|---------|---------|
+| `open` | QA Agent | 创建、分配 | 1小时未分配告警 |
+| `assigned` | Incident Agent | 监控、调整 | 4小时未开始告警 |
+| `fixing` | Dev Agent | 修复、更新 | 按deadline监控 |
+| `reviewing` | QA Agent | 复审、通过/驳回 | 2小时未复审告警 |
+| `closed` | Incident Agent | 记录闭环 | 无 |
+| `blocked` | Incident Agent | 记录阻塞原因 | 需人工介入 |
+| `wontfix` | Incident Agent | 记录原因、审批 | 需用户确认 |
+
+### 12.3 问题严重等级定义
+
+| 等级 | 定义 | 修复期限 | 优先级 |
+|------|------|---------|--------|
+| `critical` | 核心功能错误、数据丢失风险 | 4小时 | P1 |
+| `high` | 重要功能问题、影响用户体验 | 8小时 | P2 |
+| `medium` | 次要功能问题、不影响主线 | 24小时 | P3 |
+| `low` | 优化建议、代码风格 | 72小时 | P5 |
+
+### 12.4 问题分配规则
+
+| 问题类型 | 分配 Agent | 依据 |
+|---------|----------|------|
+| `logic_error` | Dev Agent | 需代码修改 |
+| `dimension_mismatch` | Dev Agent | 需代码修改 |
+| `naming_clarity` | Dev Agent | 需代码修改 |
+| `edge_case` | Dev Agent | 需代码修改 |
+| `security` | Security Agent | 安全专业处理 |
+| `performance` | Dev Agent + Incident Agent | 需优化 + 监控 |
+
+### 12.5 预防措施落实规则
+
+| 措施类型 | 落实要求 | 验收标准 |
+|---------|---------|---------|
+| 测试覆盖 | Dev Agent 添加单元测试 | 测试通过率 100% |
+| 文档更新 | Dev Agent 更新注释/文档 | 与代码同步 |
+| 流程改进 | Main Agent 更新制度 | 记录在治理文档 |
+| 告警阈值 | Incident Agent 调整阈值 | 记录调整依据 |
+
+### 12.6 问题追踪审计要求
+
+| 审计项 | 记录位置 | 检查频率 |
+|-------|---------|---------|
+| 问题创建时间 | `code_review_issues.created_at` | 每问题 |
+| 修复开始时间 | `code_review_issues.fix_history` | 每问题 |
+| 复审结果 | `code_review_issues.review_result` | 每问题 |
+| 预防措施落实 | `code_review_issues.preventive_action` | 每问题闭环 |
+| 问题闭环率 | metrics 表 | 每日 |
+
+### 12.7 当前 Open Issues 清单
+
+| Issue ID | 类型 | 严重等级 | 分配给 | 优先级 |
+|----------|------|---------|--------|--------|
+| ISS-20260525-001 | feature_gap | **critical** | Development Agent | **P0** |
+| ISS-20260525-002 | feature_gap | high | Development Agent | P1 |
+| ISS-20260525-003 | feature_gap | high | Development Agent | P1 |
+
+**依赖关系**: ISS-001 → ISS-002 → ISS-003
+
+**问题详情**: `/home/nvidia/workspace/paper/issues/INDEX.md`
+
+### 12.7 Agent 问题追踪职责表
+
+| Agent | 职责 | 关键方法 | 调用模型 |
+|-------|------|---------|---------|
+| **QA Agent** | 发现问题、创建记录、复审修复 | `create_issue_from_review()`, `verify_fix()` | 本地 qwen3.5-9b |
+| **Development Agent** | 分析根因、执行修复、编写测试 | `analyze_issue()`, `implement_fix()`, `add_test()` | 云端 glm-5 |
+| **Incident Response Agent** | 监控进度、协调资源、记录闭环 | `track_issue()`, `assign_issue()`, `close_issue()` | 云端 glm-5 |
+
+### 12.8 问题追踪 SOLID 依据
+
+| 原则 | 应用说明 |
+|------|---------|
+| **S** - Single Responsibility | IssueTracker 只负责记录，修复由 Dev Agent 负责 |
+| **O** - Open/Closed | 新增 `code_review_issues` 表，不修改现有 `audit_logs` 表 |
+| **L** - Liskov Substitution | Incident Agent 可替换为其他监控 Agent |
+| **I** - Interface Segregation | IssueTracker 提供 `create()`, `assign()`, `close()` 最小接口 |
+| **D** - Dependency Inversion | Dev Agent 依赖 IssueTracker 抽象，不直接操作数据库 |
+
+---
+
+## 十三、QA Agent 双模型配置治理规则 (新增 2026-05-25)
+
+### 13.1 双模型配置原则
+
+| 配置项 | 后端 | 模型 | 触发条件 |
+|-------|------|------|---------|
+| 默认验证 | 无LLM | 规则工具 | 总是执行 validate() |
+| LLM增强验证 | 云端 | glm-5 | quality_score < 0.7 |
+| Code Review | 本地 | qwen3.5-9b-reviewer | enable_code_review=True |
+
+### 13.2 模型切换审计要求
+
+| 操作 | 审计记录 | 依据 |
+|------|---------|------|
+| 切换到云端 | log_llm_call() | quality_score 不达标 |
+| 切换到本地 | log_llm_call() + backend_used | Code Review 请求 |
+| 模型失败 | log_error() + retry_count | 降级到备选模型 |
+
+### 13.3 成本控制规则
+
+| 后端 | 成本 | 预算阈值 | 超阈值处理 |
+|------|------|---------|-----------|
+| 云端 glm-5 | $0.001-0.004/1K tokens | $10/月 | 告警 + 优先本地 |
+| 本地 qwen3.5-9b | 免费 | 无限制 | 无 |
+
+### 13.4 SOLID 设计依据
+
+| 原则 | 应用说明 |
+|------|---------|
+| **O** - Open/Closed | 新增 `llm_validate()` 和 `code_review()` 方法，不修改现有 `validate()` |
+| **D** - Dependency Inversion | QA Agent 依赖 DashScopeClient 和 OllamaClient 抽象接口 |
+
+---
+
+---
+
+## 十四、Code Reviewer Agent 知识库治理规则 (新增 2026-05-25)
+
+### 14.1 知识库配置
+
+| 知识库 | 来源 | 用途 | Agent 角色 |
+|-------|------|------|----------|
+| Google Code Review | github.com/google/eng-practices | 代码审查技能 | QA Agent |
+
+### 14.2 知识库调用规则
+
+| 规则 | 说明 |
+|------|------|
+| 加载时机 | Code Review 开始前加载知识库 |
+| 更新频率 | 每月检查 Google 仓库更新 |
+| 失效处理 | 网络不可用时使用本地缓存版本 |
+
+### 14.3 Code Review 检查项标准
+
+| 检查项 | 优先级 | 来源依据 |
+|-------|--------|---------|
+| Design | P1 | Google looking-for.md |
+| Functionality | P1 | Google looking-for.md |
+| Complexity | P2 | Google looking-for.md |
+| Tests | P2 | Google looking-for.md |
+| Naming | P3 | Google looking-for.md |
+| Comments | P3 | Google comments.md |
+| Style | P4 | Google looking-for.md |
+| Documentation | P4 | Google looking-for.md |
+
+### 14.4 评论标签规范
+
+| 标签 | 含义 | 开发者处理要求 |
+|------|------|---------------|
+| 无标签 | 必须修改 | 必须在本 CL 处理 |
+| `Nit:` | 小问题 | 可选处理 |
+| `Optional:` | 建议改进 | 可选处理 |
+| `FYI:` | 信息 | 无需处理 |
+
+### 14.5 知识库 SOLID 依据
+
+| 原则 | 应用说明 |
+|------|---------|
+| **S** | 知识库只负责存储最佳实践，不负责代码执行 |
+| **O** | 新增知识库文件，不修改现有 QA Agent 核心逻辑 |
+| **D** | QA Agent 依赖知识库抽象，可替换为其他最佳实践来源 |
+
+### 14.6 知识库更新审计
+
+| 审计项 | 记录位置 | 检查频率 |
+|-------|---------|---------|
+| 知识库版本 | knowledge/README.md | 每月 |
+| 来源仓库更新 | Git log | 每月 |
+| QA Agent 调用 | audit_logs | 每次 Code Review |
+
+---
+
+**制度版本**: v1.2
 **创建日期**: 2026-05-24
+**更新日期**: 2026-05-25
 **维护Agent**: Main Agent
-**下次审计**: 2026-05-25
+**下次审计**: 2026-05-26

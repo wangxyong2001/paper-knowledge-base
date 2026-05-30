@@ -222,16 +222,30 @@ class PaperAnalysisAgent:
         # result包含summary/concepts/formulas/code_design
     """
 
-    def __init__(self, registry: ToolRegistry, memory: Optional[PaperMemoryManager] = None):
+    def __init__(
+        self,
+        registry: ToolRegistry,
+        memory: Optional[PaperMemoryManager] = None,
+        llm_client: Optional[Any] = None,  # ISS-001: 新增 LLM 客户端参数
+        enable_llm: bool = False  # ISS-001: 默认关闭，向后兼容
+    ):
         """
         初始化解读专家
 
         Args:
             registry: 工具注册中心
             memory: 记忆管理器（可选），用于记录分析历史
+            llm_client: LLM 客户端（可选），用于生成通俗解释
+            enable_llm: 是否启用 LLM 生成（默认 False，保持向后兼容）
+
+        SOLID依据:
+            - O (Open/Closed): 新增参数，不修改现有截取逻辑
+            - D (Dependency Inversion): 依赖 LLM 客户端抽象
         """
         self.registry = registry
         self.memory = memory
+        self.llm_client = llm_client  # ISS-001: LLM 客户端
+        self.enable_llm = enable_llm  # ISS-001: LLM 启用标志
 
     def analyze(self, query: str, chunks: List[Dict]) -> Dict:
         """
@@ -272,48 +286,77 @@ class PaperAnalysisAgent:
         # 提取核心概念 - 大写术语
         concepts = self._extract_concepts(context)
 
-        # 生成餐巾纸摘要 - 简洁表述核心观点
-        summary = self._generate_napkin_summary(query, context)
+        # ISS-001: 生成餐巾纸摘要 - 根据配置选择 LLM 或规则
+        if self.enable_llm and self.llm_client:
+            # LLM 生成通俗解释（完整版）
+            summary = self._generate_llm_summary(query, context)
+        else:
+            # 原规则截取（向后兼容）
+            summary = self._generate_napkin_summary(query, context)
+
+        # ISS-004: 分离完整版和显示版
+        summary_full = summary  # 完整版（用于审计/API）
+        summary_display = summary[:200] + "..." if len(summary) > 200 else summary  # 显示版
 
         # 提取代码设计 - 用于后续代码复现
         code_design = self._extract_code_design(context)
 
-        # 记录到记忆 - 持久化分析结果
+        # ISS-004: 审计记录完整版
         if self.memory:
             self.memory.add_episodic(query, {
-                "summary": summary,
+                "summary": summary_full,  # 完整版
                 "key_points": concepts[:5],
                 "formulas": formulas,
-                "concepts": concepts
+                "concepts": concepts,
+                "context_length": len(context)  # 记录上下文长度
             })
 
         return {
             "query": query,
-            "summary": summary,
+            "summary": summary_display,  # 显示版（默认）
+            "summary_full": summary_full,  # ISS-004: 完整版（审计用）
             "concepts": concepts,
             "formulas": formulas,
             "code_design": code_design,
-            "chunk_count": len(chunks)
+            "chunk_count": len(chunks),
+            "context_mode": "full"  # ISS-004: 标记使用完整版
         }
 
-    def _assemble_context(self, chunks: List[Dict]) -> str:
+    def _assemble_context(self, chunks: List[Dict], mode: str = "full") -> str:
         """
-        组装上下文
+        ISS-004: 组装上下文 - 支持完整版和显示版
 
         设计意图: 合并片段为完整上下文，用于后续分析
         Args:
             chunks: 论文片段列表
+            mode: 'full' 完整版给LLM, 'display' 显示版截断
         Returns:
             合并后的文本，带引用编号
-        Note:
-            限制前5个片段，每个片段截取500字，避免上下文过长
+
+        SOLID依据:
+            - O (Open/Closed): 新增参数，不修改现有调用（默认 full）
+
+        修复说明:
+            - full 模式: 不截断，给 LLM 完整信息
+            - display 模式: 智能截断（按段落边界）
         """
         parts = []
         for i, chunk in enumerate(chunks[:5]):
             content = chunk.get("content", chunk.get("text", ""))
-            # 截取500字 - 平衡信息量和处理速度
-            parts.append(f"[{i+1}] {content[:500]}")
-        return "\n\n".join(parts)
+            chunk_id = chunk.get("chunk_id", f"chunk_{i+1}")
+
+            if mode == "full":
+                # ISS-004: 完整版给 LLM - 不截断
+                parts.append(f"[{i+1}] (ID:{chunk_id})\n{content}")
+            else:
+                # 显示版 - 智能截断（按段落边界）
+                paragraphs = content.split("\n\n")
+                truncated = paragraphs[0] if paragraphs else content[:500]
+                if len(truncated) > 500:
+                    truncated = truncated[:500] + "..."
+                parts.append(f"[{i+1}] {truncated}")
+
+        return "\n\n---\n\n".join(parts)
 
     def _extract_formulas(self, text: str) -> List[Dict]:
         """
@@ -385,6 +428,65 @@ class PaperAnalysisAgent:
 
         # 去重并返回 - 使用dict.fromkeys保持顺序
         return list(dict.fromkeys(concepts))[:10]
+
+    def _generate_llm_summary(self, query: str, context: str) -> str:
+        """
+        ISS-001: 使用 LLM 生成餐巾纸摘要（通俗解释版）
+
+        设计意图: 调用 LLM 将论文内容转换为通俗易懂的解释
+        Args:
+            query: 用户查询
+            context: 论文上下文（完整版，不截断）
+        Returns:
+            通俗解释文本（约300字）
+
+        SOLID依据:
+            - S (Single Responsibility): 只负责生成摘要
+            - D (Dependency Inversion): 依赖 LLM 客户端抽象
+        """
+        # 构造 Prompt - 要求通俗解释
+        prompt = f"""
+你是论文解读专家。请根据以下论文内容，用通俗语言回答用户问题。
+
+用户问题：{query}
+
+论文内容：
+{context[:3000]}
+
+要求：
+1. 用餐巾纸级别的简洁语言解释
+2. 核心概念用通俗比喻
+3. 关键公式用大白话解释
+4. 长度控制在300字左右
+
+输出格式：
+【一句话概括】...
+【核心思想】...
+【关键公式解释】...
+"""
+
+        # 调用 LLM 客户端
+        try:
+            result = self.llm_client.chat(
+                messages=[{"role": "user", "content": prompt}],
+                model="glm-5",
+                max_tokens=500
+            )
+
+            # 提取输出内容
+            if hasattr(result, 'output'):
+                output = result.output
+            elif isinstance(result, dict):
+                output = result.get('output', result.get('content', str(result)))
+            else:
+                output = str(result)
+
+            return output
+
+        except Exception as e:
+            # 降级：LLM 失败时回退到规则截取
+            print(f"LLM 调用失败: {e}")
+            return self._generate_napkin_summary(query, context)
 
     def _generate_napkin_summary(self, query: str, context: str) -> str:
         """
@@ -465,16 +567,29 @@ class QualityAssuranceAgent:
         # result包含quality_score/risks/suggestions
     """
 
-    def __init__(self, registry: ToolRegistry, memory: Optional[PaperMemoryManager] = None):
+    def __init__(
+        self,
+        registry: ToolRegistry,
+        memory: Optional[PaperMemoryManager] = None,
+        llm_client: Optional[Any] = None,  # ISS-002: 新增 LLM 客户端
+        enable_llm: bool = False  # ISS-002: 默认关闭
+    ):
         """
-        初始化质量专家
+        ISS-002: 初始化质量专家 - 支持 LLM 增强
 
         Args:
             registry: 工具注册中心
             memory: 记忆管理器（可选）
+            llm_client: LLM 客户端（可选），用于增强验证
+            enable_llm: 是否启用 LLM 验证（默认 False）
+
+        SOLID依据:
+            - O (Open/Closed): 新增参数，不修改现有 validate() 逻辑
         """
         self.registry = registry
         self.memory = memory
+        self.llm_client = llm_client  # ISS-002
+        self.enable_llm = enable_llm  # ISS-002
 
     def validate(self, output: str, chunks: List[Dict]) -> Dict:
         """
@@ -673,6 +788,162 @@ class QualityAssuranceAgent:
             suggestions.append("质量良好，可直接使用")
 
         return suggestions
+
+    def llm_validate(self, output: str, chunks: List[Dict], rule_result: Optional[Dict] = None) -> Dict:
+        """
+        ISS-002: LLM 增强验证
+
+        设计意图: 当规则验证不确定时，调用 LLM 进行二次验证
+        Args:
+            output: 待验证的输出文本
+            chunks: 支撑上下文
+            rule_result: 规则验证结果（可选）
+        Returns:
+            LLM 验证结果:
+            {
+                "llm_quality_score": LLM评分,
+                "reasoning": 验证推理过程,
+                "issues_found": 发现的问题列表,
+                "confidence": 置信度
+            }
+        """
+        if not self.enable_llm or not self.llm_client:
+            return {"error": "LLM not enabled"}
+
+        # 组装上下文
+        contexts = [c.get("content", c.get("text", "")) for c in chunks[:3]]
+
+        prompt = f"""
+你是质量审核专家。验证以下输出的准确性和可信度。
+
+输出内容：
+{output}
+
+参考上下文：
+{contexts}
+
+检查项：
+1. 内容是否被上下文支撑
+2. 是否有虚假信息或过度推断
+3. 引用标记是否准确对应
+
+输出格式（JSON）：
+{
+    "quality_score": 0-1评分,
+    "issues": ["问题列表"],
+    "reasoning": "推理过程"
+}
+"""
+
+        try:
+            result = self.llm_client.chat(
+                messages=[{"role": "user", "content": prompt}],
+                model="glm-5",
+                max_tokens=500
+            )
+
+            # 提取输出
+            if hasattr(result, 'output'):
+                llm_output = result.output
+            elif isinstance(result, dict):
+                llm_output = result.get('output', str(result))
+            else:
+                llm_output = str(result)
+
+            # 解析 JSON
+            import json
+            try:
+                parsed = json.loads(llm_output)
+                return {
+                    "llm_quality_score": parsed.get("quality_score", 0.5),
+                    "issues_found": parsed.get("issues", []),
+                    "reasoning": parsed.get("reasoning", ""),
+                    "confidence": 0.9
+                }
+            except:
+                return {
+                    "llm_quality_score": 0.5,
+                    "issues_found": [],
+                    "reasoning": llm_output[:200],
+                    "confidence": 0.7
+                }
+
+        except Exception as e:
+            return {"error": str(e), "llm_quality_score": 0.5}
+
+    def compare_with_source(self, llm_output: str, retrieved_chunks: List[Dict]) -> Dict:
+        """
+        ISS-002: 对比 LLM 输出与论文原文
+
+        设计意图: 检查 LLM 是否添加了论文中没有的信息
+        Args:
+            llm_output: LLM 生成的输出
+            retrieved_chunks: 检索到的论文片段
+        Returns:
+            对比结果:
+            {
+                "additions": LLM添加的论文中没有的信息,
+                "omissions": 论文有但LLM遗漏的信息,
+                "distortions": LLM扭曲的信息,
+                "is_aligned": 是否一致
+            }
+        """
+        # 提取 LLM 输出中的实体
+        llm_entities = self._extract_entities_simple(llm_output)
+
+        # 组装论文原文
+        source_text = " ".join([c.get("content", "") for c in retrieved_chunks])
+
+        additions = []
+        omissions = []
+
+        # 检查 LLM 添加的内容
+        for entity in llm_entities:
+            if entity not in source_text:
+                additions.append({
+                    "entity": entity,
+                    "risk": "potential_hallucination",
+                    "suggestion": "检查是否为LLM虚构"
+                })
+
+        # 检查是否遗漏关键概念（简化版）
+        key_concepts = self._extract_key_concepts(retrieved_chunks)
+        for concept in key_concepts[:5]:
+            if concept.lower() not in llm_output.lower():
+                omissions.append({
+                    "concept": concept,
+                    "suggestion": "建议补充此概念"
+                })
+
+        # 判断是否一致
+        is_aligned = len(additions) == 0 and len(omissions) <= 2
+
+        return {
+            "additions": additions,
+            "omissions": omissions,
+            "distortions": [],
+            "is_aligned": is_aligned,
+            "alignment_score": 1.0 - (len(additions) * 0.1 + len(omissions) * 0.05)
+        }
+
+    def _extract_entities_simple(self, text: str) -> List[str]:
+        """简单实体提取"""
+        import re
+        # 提取大写词组和技术术语
+        pattern = r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\b'
+        return list(set(re.findall(pattern, text)))[:20]
+
+    def _extract_key_concepts(self, chunks: List[Dict]) -> List[str]:
+        """提取关键概念"""
+        concepts = []
+        for chunk in chunks[:3]:
+            content = chunk.get("content", "")
+            # 提取标题概念
+            if "#" in content:
+                import re
+                headers = re.findall(r'#+\s*(.+)', content)
+                concepts.extend(headers[:2])
+        return concepts[:10]
 
 
 class CodeReproductionAgent:
@@ -1027,24 +1298,55 @@ class SpecializedAgentOrchestrator:
         # result包含retrieval/analysis/quality_assurance/code_reproduction
     """
 
-    def __init__(self, session_id: str = "default"):
+    def __init__(self, session_id: str = "default", enable_llm: bool = False):
         """
-        初始化协调器
+        ISS-001: 初始化协调器 - 支持 LLM 配置
 
         Args:
             session_id: 会话ID，用于记忆隔离
+            enable_llm: 是否启用 LLM 生成（默认 False，向后兼容）
+
         Side Effects:
             - 创建ToolRegistry和MemoryManager
             - 初始化四个Agent实例
+            - ISS-001: 如启用 LLM，初始化 DashScopeClient
         """
         # 初始化组件 - 共享registry和memory
         self.registry = create_default_registry()
         self.memory = PaperMemoryManager(session_id)
 
-        # 初始化四个Agent - 共享registry和memory
+        # ISS-001: LLM 客户端初始化
+        self.enable_llm = enable_llm
+        self.llm_client = None
+
+        if enable_llm:
+            try:
+                import sys
+                sys.path.append('/home/nvidia/workspace/paper/vectordb/core')
+                from api_client import DashScopeClientSync
+                import os
+
+                api_key = os.getenv("DASHSCOPE_API_KEY", "sk-xxx")
+                self.llm_client = DashScopeClientSync(api_key=api_key)
+            except Exception as e:
+                print(f"LLM 客户端初始化失败: {e}")
+                self.enable_llm = False
+
+        # ISS-001: 初始化四个Agent - 传入 LLM 客户端
         self.retrieval_agent = PaperRetrievalAgent(self.registry, self.memory)
-        self.analysis_agent = PaperAnalysisAgent(self.registry, self.memory)
-        self.qa_agent = QualityAssuranceAgent(self.registry, self.memory)
+        self.analysis_agent = PaperAnalysisAgent(
+            self.registry,
+            self.memory,
+            llm_client=self.llm_client,
+            enable_llm=self.enable_llm
+        )
+        # ISS-002: QA Agent 也传入 LLM 客户端
+        self.qa_agent = QualityAssuranceAgent(
+            self.registry,
+            self.memory,
+            llm_client=self.llm_client,  # ISS-002: LLM 增强验证
+            enable_llm=self.enable_llm
+        )
         self.code_agent = CodeReproductionAgent(self.registry, self.memory)
 
         # 记录工作流状态 - 用于追踪Pipeline进度
@@ -1094,8 +1396,10 @@ class SpecializedAgentOrchestrator:
         )
         self.workflow_state["analysis"] = analysis_result
 
-        # 生成模拟输出用于质量验证 - 基于分析结果
-        generated_output = self._generate_output(query, analysis_result)
+        # ISS-004: 生成输出用于质量验证 - 基于分析结果
+        output_result = self._generate_output(query, analysis_result)
+        generated_output = output_result.get("output", "")  # 格式化输出用于验证
+        output_full = output_result.get("output_full", "")  # 完整版用于审计
 
         # 阶段3: 质量验证 - 使用QAAgent
         qa_result = self.qa_agent.validate(
@@ -1103,6 +1407,42 @@ class SpecializedAgentOrchestrator:
             retrieval_result["results"]
         )
         self.workflow_state["qa"] = qa_result
+
+        # ISS-003: 修缮闭环 - 如果质量不达标，自动修缮
+        max_retries = 3
+        repair_history = []
+
+        if not qa_result["is_passed"] and self.enable_llm:
+            for attempt in range(max_retries):
+                # 修缮尝试（使用完整版）
+                repair_result = self._repair_output(
+                    output_full,  # ISS-004: 使用完整版修缮
+                    retrieval_result["results"],
+                    qa_result,
+                    attempt
+                )
+                repair_history.append(repair_result)
+
+                # 更新输出
+                output_full = repair_result.get("repaired_output", output_full)
+                generated_output = output_full[:200] + "..." if len(output_full) > 200 else output_full
+
+                # 再次验证
+                qa_result = self.qa_agent.validate(
+                    generated_output,
+                    retrieval_result["results"]
+                )
+
+                if qa_result["is_passed"]:
+                    break
+
+            # 熔断：超过最大重试
+            if not qa_result["is_passed"]:
+                qa_result["warning"] = "无法完全修正，请人工审核"
+                qa_result["repair_attempts"] = max_retries
+
+        # 记录修缮历史
+        qa_result["repair_history"] = repair_history
 
         # 阶段4: 代码复现（如需要）- 使用CodeAgent
         code_result = None
@@ -1118,6 +1458,7 @@ class SpecializedAgentOrchestrator:
             "quality_assurance": qa_result,
             "code_reproduction": code_result,
             "final_output": generated_output if qa_result["is_passed"] else None,
+            "final_output_full": output_full if qa_result["is_passed"] else None,  # ISS-004: 完整版
             "workflow_state": self.workflow_state
         }
 
@@ -1133,15 +1474,25 @@ class SpecializedAgentOrchestrator:
             输出文本
         Note:
             当前为简化实现，未来可接入LLM生成更丰富的输出
+
+        ISS-004修复:
+            使用完整版摘要（summary_full）生成输出
         """
-        summary = analysis.get("summary", "")
+        # ISS-004: 使用完整版摘要生成输出
+        summary_full = analysis.get("summary_full", analysis.get("summary", ""))
+        summary_display = analysis.get("summary", "")
         concepts = analysis.get("concepts", [])
 
         output = f"关于「{query}」的分析：\n\n"
-        output += f"摘要：{summary}\n\n"
+        output += f"摘要：{summary_display}\n\n"  # 显示版
         output += f"核心概念：{', '.join(concepts[:5])}\n"
 
-        return output
+        # ISS-004: 返回结果包含完整版
+        return {
+            "output": output,  # 格式化输出
+            "output_full": summary_full,  # 完整版摘要
+            "output_display": summary_display  # 显示版摘要
+        }
 
     def get_status(self) -> Dict:
         """
@@ -1160,22 +1511,116 @@ class SpecializedAgentOrchestrator:
             }
         }
 
+    def _repair_output(
+        self,
+        output: str,
+        chunks: List[Dict],
+        qa_result: Dict,
+        attempt: int
+    ) -> Dict:
+        """
+        ISS-003: 修缮输出
+
+        设计意图: 使用 LLM 修复质量不达标的输出
+        Args:
+            output: 待修缮的输出
+            chunks: 支撑上下文
+            qa_result: 问题检测结果
+            attempt: 当前尝试次数
+        Returns:
+            修缮结果:
+            {
+                "repaired_output": 修缮后的输出,
+                "issues_addressed": 已解决的问题,
+                "attempt": 尝试次数
+            }
+        """
+        if not self.enable_llm or not self.llm_client:
+            return {"repaired_output": output, "error": "LLM not enabled"}
+
+        # 组装上下文
+        contexts = [c.get("content", "")[:500] for c in chunks[:3]]
+        issues = qa_result.get("risks", []) + qa_result.get("suggestions", [])
+
+        prompt = f"""
+你是论文解读专家。原输出存在以下问题，请根据论文原文修正。
+
+原输出：
+{output}
+
+问题列表：
+{issues}
+
+论文原文：
+{contexts}
+
+修正要求：
+1. 确保所有陈述被论文原文支撑
+2. 修正幻觉或虚假信息
+3. 保持通俗解释风格
+4. 标注引用来源 [1], [2] 等
+
+修正后的输出：
+"""
+
+        try:
+            result = self.llm_client.chat(
+                messages=[{"role": "user", "content": prompt}],
+                model="glm-5",
+                max_tokens=800
+            )
+
+            # 提取输出
+            if hasattr(result, 'output'):
+                repaired = result.output
+            elif isinstance(result, dict):
+                repaired = result.get('output', output)
+            else:
+                repaired = str(result)
+
+            return {
+                "repaired_output": repaired,
+                "issues_addressed": issues,
+                "attempt": attempt + 1,
+                "success": True
+            }
+
+        except Exception as e:
+            return {
+                "repaired_output": output,
+                "error": str(e),
+                "attempt": attempt + 1,
+                "success": False
+            }
+
 
 # ===== 便捷函数 =====
 
-def create_orchestrator(session_id: str = "default") -> SpecializedAgentOrchestrator:
+def create_orchestrator(
+    session_id: str = "default",
+    enable_llm: bool = False  # ISS-001: 新增参数
+) -> SpecializedAgentOrchestrator:
     """
-    创建协调器实例
+    ISS-001: 创建协调器实例 - 支持 LLM 配置
 
     设计意图: 提供统一的创建入口，简化使用
     Args:
         session_id: 会话ID
+        enable_llm: 是否启用 LLM 生成（默认 False）
     Returns:
         SpecializedAgentOrchestrator实例
+
+    SOLID依据:
+        - O (Open/Closed): 新增参数，不修改原有调用
+
     Example:
+        # 原调用方式（向后兼容）
         orchestrator = create_orchestrator("user-session-001")
+
+        # 启用 LLM
+        orchestrator = create_orchestrator("user-session-001", enable_llm=True)
     """
-    return SpecializedAgentOrchestrator(session_id)
+    return SpecializedAgentOrchestrator(session_id, enable_llm)
 
 
 # ===== 测试入口 =====
